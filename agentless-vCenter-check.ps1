@@ -34,6 +34,13 @@ Invoke-VMScript -VM $vm -ScriptText "powershell.exe 'netstat -ano -p tcp'" -Gues
 $credentialLin = Get-Credential -Message "Credentials to access Linux servers"
 Invoke-VMScript -VM $vm -ScriptText "ps -o pid,cmd | grep -v ]$" -GuestCredential $credentialLin
 Invoke-VMScript -VM $vm -ScriptText "netstat -atnp | awk '{print $4,$5,$7}'" -GuestCredential $credentialLin
+# For agentless dependecy analysis you need a root user account, or an account that has these permissions on /bin/netstat and /bin/ls files: CAP_DAC_READ_SEARCH and CAP_SYS_PTRACE
+# Set these capabilities by using the following commands:
+sudo setcap CAP_DAC_READ_SEARCH,CAP_SYS_PTRACE=ep /bin/ls
+sudo setcap CAP_DAC_READ_SEARCH,CAP_SYS_PTRACE=ep /bin/netstat
+# Check capabilities by these commands:
+getcap /bin/netstat -v
+getcap /bin/ls -v
 
 # 3. For discovery of installed applications and for agentless dependency analysis, VMware Tools (version 10.2.1 or later) must be installed and running on servers. 
 # Windows servers must have PowerShell version 2.0 or later installed.
