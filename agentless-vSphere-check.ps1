@@ -56,5 +56,5 @@ $vm = get-VM $VMname
   lsb_release -a # For Ubuntu
   hostnamectl # For Red Hat
   
-# 3. For , VMware Tools (version 10.2.1 or later) must be installed and running on servers. 
-
+# 3. VMware Tools (version 10.2.1 or later) must be installed and running on servers.
+  Get-VM $VMname | Select-Object -Property Name,@{Name='ToolsVersion';Expression={$_.Guest.ToolsVersion}}
