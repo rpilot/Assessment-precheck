@@ -7,12 +7,14 @@ $vcenterName = "vcenter.local" # Can be IP or FQDN for vCenter server
 $ESXiName = "host01.local" # Can be IP or FQDN for ESXi
 $VMname = "TestVMName" # VM name for testing access
 
+# ----------------------------    VMs Discovery   ---------------------------------
 # 1. ESXi / vCenter connectivity check
 Test-NetConnection $vcenterName -Port 443
 Test-NetConnection $ESXiName -Port 443
 # You need a server running vCenter Server version 6.7, 6.5, 6.0, or 5.5.
 # Servers must be hosted on an ESXi host running version 5.5 or later.
 
+# ----------------------------    Discovery of installed applications and for agentless dependency analysis   ---------------------------------
 # 2. Guest operations privileges enabled
 # Install / confirm if PSGallery repository is available. Useful for fresh servers where you're getting error: No match was found for the specified search criteria and module name 'VMware.PowerCLI'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 
@@ -27,20 +29,32 @@ Install-Module vmware.powercli -scope AllUsers -force -SkipPublisherCheck -Allow
 Set-PowerCLIConfiguration -InvalidCertificateAction Ignore
 Connect-VIServer -Server $vcenterName
 $vm = get-VM $VMname
-$credentialWin = Get-Credential -Message "Credentials to access Windows servers"
-Invoke-VMScript -VM $vm -ScriptText "powershell.exe 'Get-WmiObject Win32_Process'" -GuestCredential $credentialWin 
-Invoke-VMScript -VM $vm -ScriptText "powershell.exe 'netstat -ano -p tcp'" -GuestCredential $credentialWin
+# Windows
+  $credentialWin = Get-Credential -Message "Credentials to access Windows servers"
+  Invoke-VMScript -VM $vm -ScriptText "powershell.exe 'Get-WmiObject Win32_Process'" -GuestCredential $credentialWin 
+  Invoke-VMScript -VM $vm -ScriptText "powershell.exe 'netstat -ano -p tcp'" -GuestCredential $credentialWin
+  # Windows servers must have PowerShell version 2.0 or later installed.
 
-$credentialLin = Get-Credential -Message "Credentials to access Linux servers"
-Invoke-VMScript -VM $vm -ScriptText "ps -o pid,cmd | grep -v ]$" -GuestCredential $credentialLin
-Invoke-VMScript -VM $vm -ScriptText "netstat -atnp | awk '{print $4,$5,$7}'" -GuestCredential $credentialLin
+# Linux
+  $credentialLin = Get-Credential -Message "Credentials to access Linux servers"
+  Invoke-VMScript -VM $vm -ScriptText "ps -o pid,cmd | grep -v ]$" -GuestCredential $credentialLin
+  Invoke-VMScript -VM $vm -ScriptText "netstat -atnp | awk '{print $4,$5,$7}'" -GuestCredential $credentialLin
 # For agentless dependecy analysis you need a root user account, or an account that has these permissions on /bin/netstat and /bin/ls files: CAP_DAC_READ_SEARCH and CAP_SYS_PTRACE
 # Set these capabilities by using the following commands:
-sudo setcap CAP_DAC_READ_SEARCH,CAP_SYS_PTRACE=ep /bin/ls
-sudo setcap CAP_DAC_READ_SEARCH,CAP_SYS_PTRACE=ep /bin/netstat
+  sudo setcap CAP_DAC_READ_SEARCH,CAP_SYS_PTRACE=ep /bin/ls
+  sudo setcap CAP_DAC_READ_SEARCH,CAP_SYS_PTRACE=ep /bin/netstat
 # Check capabilities by these commands:
-getcap /bin/netstat -v
-getcap /bin/ls -v
+  getcap /bin/netstat -v
+  getcap /bin/ls -v
+<# Check Linux OS version is supported: 
+  Red Hat Enterprise Linux 7, 6, 5
+  Ubuntu Linux 16.04, 14.04
+  Debian 8, 7
+  Oracle Linux 7, 6
+  CentOS 7, 6, 5
+  SUSE Linux Enterprise Server 11 and later #>
+  lsb_release -a # For Ubuntu
+  hostnamectl # For Red Hat
+  
+# 3. For , VMware Tools (version 10.2.1 or later) must be installed and running on servers. 
 
-# 3. For discovery of installed applications and for agentless dependency analysis, VMware Tools (version 10.2.1 or later) must be installed and running on servers. 
-# Windows servers must have PowerShell version 2.0 or later installed.
