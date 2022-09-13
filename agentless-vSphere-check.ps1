@@ -48,7 +48,7 @@ $vm = get-VM $VMname
   getcap /bin/ls -v
 <# Check Linux OS version is supported: 
   Red Hat Enterprise Linux 7, 6, 5
-  Ubuntu Linux 16.04, 14.04
+  Ubuntu Linux 20.04, 18.04, 16.04, 14.04 (14.04 is problematic in fact)
   Debian 8, 7
   Oracle Linux 7, 6
   CentOS 7, 6, 5
@@ -56,13 +56,13 @@ $vm = get-VM $VMname
   lsb_release -a # For Ubuntu
   hostnamectl # For Red Hat
   
-  <# Failback options for checking dependencies and software inventory:
+  <# Fallback options for checking dependencies and software inventory:
   # Linux
-  apt list --installed > "$(uname -n)-apt.txt"
+  	apt list --installed > "$(uname -n)-apt.txt"
 	netstat -atp > "$(uname -n)-netstat.txt"
   # Windows
-  Get-WmiObject -Class Win32_Product | select Name, Vendor, Version | Out-File "$env:computername-soft.txt"
-  netstat -abf | Out-File "$env:computername-netstat.txt"
+  	Get-WmiObject -Class Win32_Product | select Name, Vendor, Version | Out-File "$env:computername-soft.txt"
+  	netstat -abf | Out-File "$env:computername-netstat.txt"
   #>
   
 # 3. VMware Tools (version 10.2.1 or later) must be installed and running on servers.
