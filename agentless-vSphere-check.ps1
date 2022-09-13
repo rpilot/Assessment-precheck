@@ -56,5 +56,14 @@ $vm = get-VM $VMname
   lsb_release -a # For Ubuntu
   hostnamectl # For Red Hat
   
+  <# Failback options for checking dependencies and software inventory:
+  # Linux
+  apt list --installed > "$(uname -n)-apt.txt"
+	netstat -atp > "$(uname -n)-netstat.txt"
+  # Windows
+  Get-WmiObject -Class Win32_Product | select Name, Vendor, Version | Out-File "$env:computername-soft.txt"
+  netstat -abf | Out-File "$env:computername-netstat.txt"
+  #>
+  
 # 3. VMware Tools (version 10.2.1 or later) must be installed and running on servers.
   Get-VM $VMname | Select-Object -Property Name,@{Name='ToolsVersion';Expression={$_.Guest.ToolsVersion}}
